@@ -1,0 +1,213 @@
+import javax.swing.*;
+import java.io.IOException;
+
+
+public class MainCode  
+{
+    public static void main (String args[] )     throws IOException {
+        Board Board1 = new Board(); 
+        Dice4Monopoly Dice4mon = new Dice4Monopoly();
+
+        String answer = JOptionPane.showInputDialog("How Many Players? Must be more than 1");
+        int PlayerCount = Integer.parseInt(answer);
+        System.out.println(""+PlayerCount+ " Players Created");
+
+        final Player[] NumberofPlayers = new Player[PlayerCount];
+        for(int i = 0; i < NumberofPlayers.length; i++) 
+        {
+            String PlayerName = JOptionPane.showInputDialog("Player Name?");
+
+            //System.out.println(""+PlayerName+ " Was Created");
+            String PlayerColor = JOptionPane.showInputDialog("" +PlayerName+"'s Color?");
+            //System.out.println(""+PlayerColor+ "  Colored Players Created");
+            NumberofPlayers[i] = new Player(PlayerName, PlayerColor);
+            
+
+        }
+
+        final MonopolyGraphics mg = new MonopolyGraphics();
+        new Thread(new Runnable() {
+                public void run() {
+                    do {
+                        mg.draw(NumberofPlayers);
+
+                        try { Thread.sleep(1000 / 60); } catch(InterruptedException e) {}
+                    } while(true);
+                }
+            }).start();
+
+        int x = 0;
+
+        while(true)
+        {
+
+            if(x < NumberofPlayers.length)
+            {
+                int PlayerMoney = NumberofPlayers[x].getMoney();
+                int StillPlaying = 0, StillPlayingIndex = 0;
+                int PlayerPositionNow = NumberofPlayers[x].PositionNow1;
+                String name = NumberofPlayers[x].getName();
+                for (int y = 0; y < NumberofPlayers.length;y++)
+                {
+                    if(NumberofPlayers[y].getMoney() > 0) {
+                        StillPlaying++;
+                        StillPlayingIndex = y;
+                    }
+
+                }
+
+                if(StillPlaying == 1) {
+                    Player winningPlayer = NumberofPlayers[StillPlayingIndex];
+                    System.out.println("Player " +x+ " or " +name+ " Won Monopoly!!");
+                    System.out.println("Good Job");
+                    break;
+                }
+
+                if (PlayerMoney > 0)
+                {
+                    // while (havemoney)
+                    // if nomoanye == true
+                    // break;
+                    //System.out.println(""+NumberofPlayers[x]"");
+                    String PositionNowName =  Board1.GetPositionName(PlayerPositionNow);
+
+                    System.out.println("Player " +x+ "'s turn, or " +name+ " and they are at " +PositionNowName+ " on the board");
+                    System.out.println("You have $"+PlayerMoney+"");
+                    //code above not needed until later when properties owned is implemented
+
+                    Dice4mon.Roll4Monopoly();
+                    int DICE1 = Dice4mon.Rolled1();
+                    int DICE2 = Dice4mon.Rolled2();
+                    int HowFar2Move = (DICE1 + DICE2);
+                    NumberofPlayers[x].getLocation(HowFar2Move);
+                    // System.out.println("" +DICE1+", " +DICE2+", " +HowFar2Move+"");
+                    if(DICE1 == DICE2)
+                    {
+                        Dice4mon.Roll4Monopoly();
+                        DICE1 = Dice4mon.Rolled1();
+                        DICE2 = Dice4mon.Rolled2();
+                        HowFar2Move = (DICE1 + DICE2);
+                        NumberofPlayers[x].getLocation(HowFar2Move);
+                        //System.out.println("" +DICE1+", " +DICE2+", " +HowFar2Move+"");
+                    }
+                    //movement code above
+                    PlayerPositionNow = NumberofPlayers[x].PositionNow1;
+                    // System.out.println("PlayerPositonNow =  " +PlayerPositionNow+"");
+
+                    //chance
+                    if (PlayerPositionNow == 2||PlayerPositionNow == 17|| PlayerPositionNow == 33)
+                    {
+                        NumberofPlayers[x].Chance();
+                        //System.out.println("chance paid/landed on");
+                    }
+
+                    //tax
+                    if (PlayerPositionNow == 4)
+                    {
+                        NumberofPlayers[x].Tax();
+                        //System.out.println("tax paid");
+                        //add tax if have time
+                    }
+                    PlayerPositionNow = NumberofPlayers[x].PositionNow1;
+                    int PosPrice = Board1.PositionPrice(PlayerPositionNow);
+                    PlayerMoney = NumberofPlayers[x].getMoney();
+                    int Rent = Board1.RENT(PlayerPositionNow);
+                    int Owner = Board1.Owner(PlayerPositionNow);
+                    String GroupCOLOR = Board1.getGroupColor();
+                    
+                    //System.out.println(""+Owner+"owner");
+
+                    //yes/no box for purchase of property
+                    if (Owner == -1)
+                    {
+                        if (PlayerPositionNow != 0 && PlayerPositionNow != 2 && PlayerPositionNow != 4 && PlayerPositionNow != 7 && PlayerPositionNow != 10 && PlayerPositionNow != 17 && PlayerPositionNow != 20 && PlayerPositionNow != 22 && PlayerPositionNow != 30 && PlayerPositionNow != 33 && PlayerPositionNow != 36 && PlayerPositionNow != 38)
+                        {
+
+                            if (PlayerMoney >= PosPrice)
+                            {
+                                PositionNowName =  Board1.GetPositionName(PlayerPositionNow);
+                                int i = JOptionPane.showOptionDialog(null, 
+                                        ""+name+" Do you Want to buy " +PositionNowName+" for " +PosPrice+ "?", //add player name
+                                        "Feedback", 
+                                        JOptionPane.OK_CANCEL_OPTION, 
+                                        JOptionPane.INFORMATION_MESSAGE, 
+                                        null, 
+                                        new String[]{"Yes", "No"}, 
+                                        "default");
+                                if (i == JOptionPane.OK_OPTION)
+                                {
+                                    Board1.PositionBought(x, PlayerPositionNow);
+                                    PlayerMoney = PlayerMoney - PosPrice;
+                                    NumberofPlayers[x].BoughtProperty(PlayerMoney);
+                                    //System.out.println("$"+PlayerMoney+ " main Player Money");
+                                }
+
+                            }
+                            else 
+                            {
+                            }
+                        }
+
+                        else
+                        {
+                            if (PlayerPositionNow != 0 && PlayerPositionNow != 2 && PlayerPositionNow != 4 && PlayerPositionNow != 7 && PlayerPositionNow != 10 && PlayerPositionNow != 17 && PlayerPositionNow != 20 && PlayerPositionNow != 22 && PlayerPositionNow != 30 && PlayerPositionNow != 33 && PlayerPositionNow != 36 && PlayerPositionNow != 38)
+                            {
+                                if (PlayerMoney >= Rent)
+                                {
+                                    PlayerMoney = PlayerMoney - Rent;
+                                    NumberofPlayers[x].Rent(PlayerMoney);
+                                    NumberofPlayers[Owner].RentPaid(Rent);
+                                    
+                                    //System.out.println("$" +PlayerMoney+ " main");
+                                    //System.out.println("$" +Rent+ " rent main");
+                                }
+                                else
+                                {
+                                    NumberofPlayers[x].Out(0);
+                                }
+                            }
+
+                        }
+                    }
+                    else
+                    {
+                        if (PlayerPositionNow != 0 && PlayerPositionNow != 2 && PlayerPositionNow != 4 && PlayerPositionNow != 7 && PlayerPositionNow != 10 && PlayerPositionNow != 17 && PlayerPositionNow != 20 && PlayerPositionNow != 22 && PlayerPositionNow != 30 && PlayerPositionNow != 33 && PlayerPositionNow != 36 && PlayerPositionNow != 38)
+                        {
+                            if (PlayerMoney >= Rent)
+                            {
+                                PlayerMoney = PlayerMoney - Rent;
+                                NumberofPlayers[x].Rent(PlayerMoney);
+                                NumberofPlayers[Owner].RentPaid(Rent);
+                                //remove
+                                //System.out.println("$" +PlayerMoney+ " main");
+                                //System.out.println("$" +Rent+ " rent main");
+                            }
+                            else
+                            {
+                                NumberofPlayers[x].Out(0);
+                            }
+                        }
+
+                        
+                    }
+                    x++;
+
+                  
+
+                }
+                else
+                {
+                    x ++;
+                }
+
+            }
+
+            else
+            {
+                x = 0;
+            }
+        }
+    }
+
+    
+}
